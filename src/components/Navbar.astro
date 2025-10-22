@@ -1,0 +1,50 @@
+---
+import { Icon } from "astro-icon/components";
+---
+
+<div class="fixed z-100 navbar bg-base-100 border-b-2 border-base-300">
+  <div class="navbar-start">
+    <a href="/" class="text-xs pixel font-bold flex items-center">
+        <img src="https://us-east-1.tixte.net/uploads/cdn.democraft.fr/logo.png" class="max-sm:ml-2 h-10 w-10 md:h-13 md:w-13 rounded-lg" />
+    </a>
+  </div>
+
+  <div class="navbar-center">
+            <span class="md:block ml-1 text-2xl font-bold font-[Minecraft_Five]">DEMOCRAFT</span>
+            <!--span class="badge badge-xs md:badge-sm badge-primary ml-2">
+              <Icon name="lucide:pencil-ruler" />
+              WIKI
+            </span-->
+        </div>
+
+  <div class="navbar-end">
+
+    <label class="swap swap-rotate btn btn-soft px-2 py-0 bg-base-100 border-2 border-base-300 h-10 w-10 md:h-13 md:w-13">
+      <input type="checkbox" id="theme_switcher"/>
+      <Icon
+        name="lucide:sun"
+        class="swap-on h-6 w-6 fill-current"
+      />
+      <Icon
+        name="lucide:moon"
+        class="swap-off h-6 w-6 fill-current"
+      />
+    </label>
+  </div>
+</div>
+
+
+<script type="module" is:inline data-astro-rerun>
+  
+  if (localStorage.getItem("theme") === "demodark") {
+    document.getElementById("theme_switcher").checked = true;
+  }
+
+  document
+    .getElementById("theme_switcher")
+    ?.addEventListener("change", (e) => {
+      const theme = e.target.checked ? "demodark" : "demolight";
+      document.documentElement.setAttribute("data-theme", theme);
+      localStorage.setItem("theme", theme);
+    });
+</script>

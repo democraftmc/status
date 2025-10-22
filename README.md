@@ -1,2 +1,1 @@
-# status
-Status page with swag.
+# Status page builed with style
