@@ -1,0 +1,270 @@
+---
+import Layout from "../layouts/default.astro";
+
+export async function getStaticPaths() {
+  const key = import.meta.env.NETWEAK_API_KEY;
+  
+  try {
+    const response = await fetch("https://statut.democraft.fr/json", {
+      method: "GET",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+    });
+
+    if (!response.ok) {
+      console.error(`HTTP error! status: ${response.status}`);
+      return [];
+    }
+
+    const mainData = await response.json();
+    const services = mainData?.services ?? [];
+
+    // Generate paths for all services
+    return services.map((service) => ({
+      params: { slug: service.id },
+      props: { service, mainData },
+    }));
+  } catch (error) {
+    console.error("Error fetching services for static paths:", error);
+    return [];
+  }
+}
+
+const { service, mainData } = Astro.props;
+const { slug } = Astro.params;
+const serviceId = slug;
+
+const key = import.meta.env.NETWEAK_API_KEY;
+
+// Service is already passed from getStaticPaths
+// No need to fetch main API data again
+
+// Determine if it's a server or website based on service type or other properties
+// The API might have a 'type' field or we can infer from the service properties
+// Try to determine from service.type, service.kind, or other fields
+const serviceType = service.type || service.kind || 'server';
+
+// Fetch detailed data from api.netweak.com
+// Try both endpoints if we're not sure about the type
+let detailedData = null;
+let actualType = serviceType;
+
+// First, try the determined type
+const primaryEndpoint = serviceType === 'website' || serviceType === 'site'
+  ? `https://api.netweak.com/website/${serviceId}`
+  : `https://api.netweak.com/server/${serviceId}`;
+
+try {
+  const response = await fetch(primaryEndpoint, {
+    method: "GET",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+  });
+
+  if (response.ok) {
+    detailedData = await response.json();
+    actualType = primaryEndpoint.includes('/website/') ? 'website' : 'server';
+  } else {
+    // If primary endpoint fails, try the alternate endpoint
+    const alternateEndpoint = primaryEndpoint.includes('/website/')
+      ? `https://api.netweak.com/server/${serviceId}`
+      : `https://api.netweak.com/website/${serviceId}`;
+    
+    const altResponse = await fetch(alternateEndpoint, {
+      method: "GET",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+    });
+
+    if (altResponse.ok) {
+      detailedData = await altResponse.json();
+      actualType = alternateEndpoint.includes('/website/') ? 'website' : 'server';
+    }
+  }
+} catch (error) {
+  console.error(`Detailed API fetch error:`, error);
+}
+
+// Status formatting helpers
+const statusLabels = {
+  operational: "Operational",
+  ok: "Operational",
+  online: "Online",
+  maintenance: "Maintenance",
+  degraded: "Degraded",
+  offline: "Offline",
+  incident: "Incident",
+  minor: "Minor Issue",
+  major: "Major Issue",
+  planned: "Planned",
+  in_progress: "In Progress",
+  resolved: "Resolved",
+};
+
+const formatStatus = (value) => statusLabels[value] ?? value?.replace(/_/g, " ") ?? "Unknown";
+
+const formatDate = (iso) =>
+  iso ? new Date(iso).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" }) : "N/A";
+
+const badgeVariants = {
+  operational: "badge-success",
+  ok: "badge-success",
+  online: "badge-success",
+  maintenance: "badge-warning",
+  degraded: "badge-warning",
+  offline: "badge-error",
+  incident: "badge-error",
+  major: "badge-error",
+  minor: "badge-warning",
+  planned: "badge-info",
+  in_progress: "badge-info",
+  resolved: "badge-success",
+};
+
+const badgeClass = (value, extra = "") => `badge ${badgeVariants[value] ?? "badge-ghost"} ${extra}`.trim();
+---
+
+<Layout title={service.name}>
+  <div class="hero bg-base-200 py-12">
+    <div class="hero-content text-center">
+      <div class="max-w-md">
+        <h1 class="text-5xl font-bold font-[Minecraft_Five]">{service.name}</h1>
+        <p class="py-6">{service.description}</p>
+        <span class={badgeClass(service.status, "badge-lg")}>
+          <div class="inline-grid *:[grid-area:1/1]">
+            <div class="status status-neutral animate-ping"></div>
+            <div class="status status-neutral"></div>
+          </div>
+          {formatStatus(service.status)}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <main class="container mx-auto flex flex-col gap-8 px-4 py-8">
+    <!-- Basic Service Information -->
+    <section class="bg-base-200 border-2 border-base-300 rounded-lg shadow-md p-6">
+      <h2 class="text-2xl font-bold mb-4 font-[Minecraft_Five]">Informations de base</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <span class="font-semibold">Type:</span>
+          <span class="ml-2 capitalize">{actualType}</span>
+        </div>
+        <div>
+          <span class="font-semibold">Statut:</span>
+          <span class="ml-2">{formatStatus(service.status)}</span>
+        </div>
+        {service.url && (
+          <div>
+            <span class="font-semibold">URL:</span>
+            <a href={service.url} target="_blank" rel="noopener noreferrer" class="ml-2 link link-primary">
+              {service.url}
+            </a>
+          </div>
+        )}
+        {service.updated_at && (
+          <div>
+            <span class="font-semibold">Dernière mise à jour:</span>
+            <span class="ml-2">{formatDate(service.updated_at)}</span>
+          </div>
+        )}
+      </div>
+    </section>
+
+    <!-- Detailed Data Section -->
+    {detailedData && (
+      <section class="bg-base-200 border-2 border-base-300 rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-bold mb-4 font-[Minecraft_Five]">
+          Détails {actualType === 'server' ? 'du serveur' : 'du site web'}
+        </h2>
+        
+        {actualType === 'server' ? (
+          <!-- Server-specific data -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {detailedData.ip && (
+              <div>
+                <span class="font-semibold">Adresse IP:</span>
+                <span class="ml-2 font-mono">{detailedData.ip}</span>
+              </div>
+            )}
+            {detailedData.port && (
+              <div>
+                <span class="font-semibold">Port:</span>
+                <span class="ml-2 font-mono">{detailedData.port}</span>
+              </div>
+            )}
+            {detailedData.players !== undefined && (
+              <div>
+                <span class="font-semibold">Joueurs:</span>
+                <span class="ml-2">{detailedData.players?.online ?? 0} / {detailedData.players?.max ?? 'N/A'}</span>
+              </div>
+            )}
+            {detailedData.version && (
+              <div>
+                <span class="font-semibold">Version:</span>
+                <span class="ml-2">{detailedData.version}</span>
+              </div>
+            )}
+            {detailedData.motd && (
+              <div class="col-span-full">
+                <span class="font-semibold">MOTD:</span>
+                <p class="mt-2 p-4 bg-base-300 rounded font-mono text-sm whitespace-pre-wrap">{detailedData.motd}</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <!-- Website-specific data -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {detailedData.response_time && (
+              <div>
+                <span class="font-semibold">Temps de réponse:</span>
+                <span class="ml-2">{detailedData.response_time}ms</span>
+              </div>
+            )}
+            {detailedData.ssl_valid !== undefined && (
+              <div>
+                <span class="font-semibold">SSL Valide:</span>
+                <span class={`ml-2 ${detailedData.ssl_valid ? 'text-success' : 'text-error'}`}>
+                  {detailedData.ssl_valid ? 'Oui' : 'Non'}
+                </span>
+              </div>
+            )}
+            {detailedData.ssl_expiry && (
+              <div>
+                <span class="font-semibold">Expiration SSL:</span>
+                <span class="ml-2">{formatDate(detailedData.ssl_expiry)}</span>
+              </div>
+            )}
+            {detailedData.http_status && (
+              <div>
+                <span class="font-semibold">Code HTTP:</span>
+                <span class="ml-2 font-mono">{detailedData.http_status}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        <!-- Display any additional data that might be present -->
+        {Object.keys(detailedData).length > 0 && (
+          <details class="mt-6">
+            <summary class="cursor-pointer font-semibold">Données brutes</summary>
+            <pre class="mt-4 p-4 bg-base-300 rounded overflow-x-auto text-sm">{JSON.stringify(detailedData, null, 2)}</pre>
+          </details>
+        )}
+      </section>
+    )}
+
+    {!detailedData && (
+      <section class="bg-base-200 border-2 border-base-300 rounded-lg shadow-md p-6">
+        <div class="alert alert-info">
+          <span>Les détails supplémentaires ne sont pas disponibles pour ce service.</span>
+        </div>
+      </section>
+    )}
+
+    <!-- Back button -->
+    <div class="flex justify-center mt-8">
+      <a href="/" class="btn btn-primary">
+        <iconify-icon icon="lucide:arrow-left" class="mr-2"></iconify-icon>
+        Retour à l'accueil
+      </a>
+    </div>
+  </main>
+</Layout>
