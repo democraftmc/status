@@ -1,0 +1,157 @@
+---
+import Layout from "../layouts/default.astro";
+
+const key = import.meta.env.NETWEAK_API_KEY;
+
+let data = null;
+
+try {
+  const response = await fetch("https://statut.democraft.fr/json", {
+    method: "GET",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+  });
+
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+  data = await response.json();
+} catch (error) {
+  console.error("Status fetch error:", error);
+}
+
+const groups = data?.groups ?? [];
+const services = (data?.services ?? []).reduce((acc, service) => {
+  acc[service.group_id] = acc[service.group_id] ?? [];
+  acc[service.group_id].push(service);
+  return acc;
+}, {});
+const recentIssues = data?.recent_issues ?? [];
+
+const statusLabels = {
+  operational: "Operational",
+  ok: "Operational",
+  online: "Online",
+  maintenance: "Maintenance",
+  degraded: "Degraded",
+  offline: "Offline",
+  incident: "Incident",
+  minor: "Minor Issue",
+  major: "Major Issue",
+  planned: "Planned",
+  in_progress: "In Progress",
+  resolved: "Resolved",
+};
+const formatStatus = (value) => statusLabels[value] ?? value?.replace(/_/g, " ") ?? "Unknown";
+const formatDate = (iso) =>
+  iso ? new Date(iso).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" }) : "N/A";
+const logo = data?.logo_url ?? data?.logo_dark_url ?? "";
+const hasData = Boolean(data);
+
+const badgeVariants = {
+  operational: "badge-success",
+  ok: "badge-success",
+  online: "badge-success",
+  maintenance: "badge-warning",
+  degraded: "badge-warning",
+  offline: "badge-error",
+  incident: "badge-error",
+  major: "badge-error",
+  minor: "badge-warning",
+  planned: "badge-info",
+  in_progress: "badge-info",
+  resolved: "badge-success",
+};
+const badgeClass = (value, extra = "") => `badge ${badgeVariants[value] ?? "badge-ghost"} ${extra}`.trim();
+---
+<Layout>
+  <main class="container mx-auto flex flex-col gap-12 px-4 py-12">
+    {hasData ? (
+      <>
+        <section class="card bg-base-100 shadow-xl">
+          <div class="card-body items-center gap-6 text-center">
+            {logo && (
+              <div class="avatar">
+                <div class="w-24 rounded-full border border-base-200 bg-base-100 p-2">
+                  <img src={logo} alt={`${data?.name ?? "Status"} logo`} loading="lazy" />
+                </div>
+              </div>
+            )}
+
+            <div class="flex flex-col items-center gap-3">
+              <h1 class="card-title text-3xl font-bold">{data?.name ?? "Status Page"}</h1>
+              <span class={badgeClass(data?.status, "badge-lg")}>{formatStatus(data?.status)}</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="space-y-6">
+          <h2 class="text-2xl font-semibold">Groupes de services</h2>
+
+          <div class="grid gap-6">
+            {groups.map((group) => (
+              <article class="card bg-base-100 shadow-md" key={group.id}>
+                <div class="card-body space-y-5">
+                  <header class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div class="space-y-1">
+                      <h3 class="card-title text-xl font-semibold">{group.name}</h3>
+                      {group.description && <p class="text-base-content/70">{group.description}</p>}
+                    </div>
+                    <span class={badgeClass(group.status, "badge-lg")}>{formatStatus(group.status)}</span>
+                  </header>
+
+                  {group.show_services && (
+                    <div class="join join-vertical w-full gap-3">
+                      {(services[group.id] ?? []).map((service) => (
+                        <div class="join-item rounded-box border border-base-300 bg-base-200 p-4" key={service.id}>
+                          <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                            <div class="space-y-1">
+                              <p class="font-semibold">{service.name}</p>
+                              {service.description && (
+                                <p class="text-sm text-base-content/70">{service.description}</p>
+                              )}
+                            </div>
+                            <span class={badgeClass(service.status)}>{formatStatus(service.status)}</span>
+                          </div>
+                          <p class="text-sm text-base-content/60">
+                            Dernière mise à jour&nbsp;: {formatDate(service.status_updated_at)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {recentIssues.length > 0 && (
+          <section class="space-y-6">
+            <h2 class="text-2xl font-semibold">Incidents récents</h2>
+
+            <div class="grid gap-6">
+              {recentIssues.map((issue) => (
+                <article class="card bg-base-100 shadow-md" key={issue.id}>
+                  <div class="card-body space-y-4">
+                    <header class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                      <h3 class="card-title text-lg font-semibold">{issue.name}</h3>
+                      <span class={badgeClass(issue.severity, "badge-outline")}>{formatStatus(issue.severity)}</span>
+                    </header>
+
+                    <p class="text-sm text-base-content/70">
+                      De {formatDate(issue.starts_at)} à {formatDate(issue.ends_at)}
+                    </p>
+                    <div class="badge badge-outline">{formatStatus(issue.state)}</div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+      </>
+    ) : (
+      <div class="alert alert-info justify-center shadow-lg">
+        <span>Aucune donnée disponible pour le moment. Réessayez plus tard.</span>
+      </div>
+    )}
+  </main>
+</Layout>

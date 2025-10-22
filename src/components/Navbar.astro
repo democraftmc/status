@@ -36,14 +36,14 @@ import { Icon } from "astro-icon/components";
 
 <script type="module" is:inline data-astro-rerun>
   
-  if (localStorage.getItem("theme") === "demodark") {
+  if (localStorage.getItem("theme") === "dark") {
     document.getElementById("theme_switcher").checked = true;
   }
 
   document
     .getElementById("theme_switcher")
     ?.addEventListener("change", (e) => {
-      const theme = e.target.checked ? "demodark" : "demolight";
+      const theme = e.target.checked ? "dark" : "light";
       document.documentElement.setAttribute("data-theme", theme);
       localStorage.setItem("theme", theme);
     });
