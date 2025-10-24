@@ -98,7 +98,7 @@ const badgeClass = (value, extra = "") => `badge ${badgeVariants[value] ?? "badg
 					<div>
 						<div class="divider"></div>
 						<div class="px-2">
-							<a class="flex" href={`/${service.id}`}	>
+							<a class="flex" href={`/${service.serviceable_id}`}	>
 								<h4 class="card-title flex-1">{service.name}</h4>
 								<span class={badgeClass(service.status)}>
 									<div class="inline-grid *:[grid-area:1/1]">
