@@ -22,7 +22,7 @@ export async function getStaticPaths() {
 
     // Generate paths for all services
     return services.map((service) => ({
-      params: { slug: service.id },
+      params: { slug: service.serviceable_id },
       props: { service, mainData },
     }));
   } catch (error) {
