@@ -115,7 +115,7 @@ const badgeClass = (value, extra = "") => `badge ${badgeVariants[value] ?? "badg
       </a>
       <div class="hero-content text-center">
         <div>
-          <h1 class="p-4 mb-2 rounded-lg glass text-5xl font-bold">{service.name}</h1>
+          <h1 class="p-4 mb-2 rounded-lg glass text-3xl md:text-5xl font-bold">{service.name}</h1>
           <span class={badgeClass(data.status)}>
               <div class="inline-grid *:[grid-area:1/1]">
                 <div class="status status-neutral animate-ping"></div>
