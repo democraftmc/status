@@ -44,7 +44,7 @@ let serviceType = "websites";
 // The API might have a 'type' field or we can infer from the service properties
 // Try to determine from service.type, service.kind, or other fields
 
-if (!service.type && service.name.toLowerCase().includes("server")) {
+if (service.type.includes("server")) {
     serviceType = "servers";
 }
 
@@ -104,6 +104,15 @@ const badgeVariants = {
 };
 
 const badgeClass = (value, extra = "") => `badge ${badgeVariants[value] ?? "badge-ghost"} ${extra}`.trim();
+
+const formatBytes = (bytes, decimals = 2) => {
+  if (!+bytes) return "0 Bytes";
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+};
 ---
 
 <Layout title={service.name}>
@@ -130,4 +139,111 @@ const badgeClass = (value, extra = "") => `badge ${badgeVariants[value] ?? "badg
         </div>
       </div>
     </div>
+
+    <main id="1" class="container mx-auto flex flex-col gap-12 px-4 py-12">
+      {service.type.includes("server") && data.payload && (
+        <section class="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div class="card bg-base-200 shadow-md">
+            <div class="card-body items-center text-center">
+              <h2 class="card-title">CPU</h2>
+              <div
+                class="radial-progress text-primary"
+                style={`--value:${data.payload.load_cpu}; --size:12rem; --thickness: 1rem;`}
+                role="progressbar"
+              >
+                <span class="text-2xl font-bold">{data.payload.load_cpu}%</span>
+              </div>
+              <p class="text-sm text-base-content/70">{data.payload.cpu_name}</p>
+            </div>
+          </div>
+
+          <div class="card bg-base-200 shadow-md">
+            <div class="card-body items-center text-center">
+              <h2 class="card-title">RAM</h2>
+              <div
+                class="radial-progress text-accent"
+                style={`--value:${data.payload.load_ram}; --size:12rem; --thickness: 1rem;`}
+                role="progressbar"
+              >
+                <span class="text-2xl font-bold">{data.payload.load_ram.toFixed(2)}%</span>
+              </div>
+              <p class="text-sm text-base-content/70">
+                {formatBytes(data.payload.ram_usage)} / {formatBytes(data.payload.ram_total)}
+              </p>
+            </div>
+          </div>
+
+          <div class="card bg-base-200 shadow-md">
+            <div class="card-body items-center text-center">
+              <h2 class="card-title">Disk</h2>
+              <div
+                class="radial-progress text-secondary"
+                style={`--value:${data.payload.load_disk}; --size:12rem; --thickness: 1rem;`}
+                role="progressbar"
+              >
+                <span class="text-2xl font-bold">{data.payload.load_disk.toFixed(2)}%</span>
+              </div>
+              <p class="text-sm text-base-content/70">
+                {formatBytes(data.payload.disk_usage)} / {formatBytes(data.payload.disk_total)}
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {!service.type.includes("server") && data.last_check && (
+        <section class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div class="card bg-base-200 shadow-md">
+            <div class="card-body">
+              <h2 class="card-title mb-4">Uptime</h2>
+              <div class="stats stats-vertical shadow">
+                <div class="stat">
+                  <div class="stat-title">Aujourd'hui</div>
+                  <div class="stat-value text-primary">{data.uptime.day}%</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-title">Cette semaine</div>
+                  <div class="stat-value text-primary">{data.uptime.week}%</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-title">Ce mois-ci</div>
+                  <div class="stat-value text-secondary">{data.uptime.month}%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card bg-base-200 shadow-md">
+            <div class="card-body items-center text-center">
+              <h2 class="card-title">Dernière Vérification</h2>
+              <p class="text-6xl font-bold">{data.last_check.response_time}<span class="text-xl">ms</span></p>
+              <div class={badgeClass(data.status, "mt-2")}>{data.last_check.response_code} - {formatStatus(data.status)}</div>
+              <p class="text-sm text-base-content/70 mt-4">
+                Le {formatDate(data.last_check.created_at)}
+              </p>
+            </div>
+          </div>
+
+          {data.certificate && (
+            <div class="card bg-base-200 shadow-md">
+              <div class="card-body">
+                <h2 class="card-title mb-2">Certificat SSL</h2>
+                <div class="space-y-3">
+                  <p>
+                    <span class="font-semibold">Statut :</span>
+                    {data.certificate.valid ? (
+                      <span class="badge badge-success ml-2">Valide</span>
+                    ) : (
+                      <span class="badge badge-error ml-2">Invalide</span>
+                    )}
+                  </p>
+                  <p><span class="font-semibold">Émetteur :</span> {data.certificate.issuer}</p>
+                  <p><span class="font-semibold">Expire le :</span> {formatDate(data.certificate.valid_to)}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+    </main>
 </Layout>

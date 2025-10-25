@@ -23,6 +23,8 @@ jobs:
           submodules: true
       - name: Install, build, and upload your site output
         uses: withastro/action@v4
+        env:
+          NETWEAK_API_KEY: ${{ secrets.NETWEAK_API_KEY }}
         with:
             package-manager: pnpm@latest
 
