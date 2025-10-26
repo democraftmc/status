@@ -1,127 +1,166 @@
 ---
 import Layout from "../layouts/default.astro";
-
-const key = import.meta.env.NETWEAK_API_KEY;
-
-let data = null;
-
-try {
-  const response = await fetch("https://statut.democraft.fr/json", {
-    method: "GET",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-  });
-
-  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-  data = await response.json();
-} catch (error) {
-  console.error("Status fetch error:", error);
-}
-
-const groups = data?.groups ?? [];
-const services = (data?.services ?? []).reduce((acc, service) => {
-  acc[service.group_id] = acc[service.group_id] ?? [];
-  acc[service.group_id].push(service);
-  return acc;
-}, {});
-const recentIssues = data?.recent_issues ?? [];
-
-const statusLabels = {
-  operational: "Operational",
-  ok: "Operational",
-  online: "Online",
-  maintenance: "Maintenance",
-  degraded: "Degraded",
-  offline: "Offline",
-  incident: "Incident",
-  minor: "Minor Issue",
-  major: "Major Issue",
-  planned: "Planned",
-  in_progress: "In Progress",
-  resolved: "Resolved",
-};
-const formatStatus = (value) => statusLabels[value] ?? value?.replace(/_/g, " ") ?? "Unknown";
-const formatDate = (iso) =>
-  iso ? new Date(iso).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" }) : "N/A";
-const logo = data?.logo_url ?? data?.logo_dark_url ?? "";
-const hasData = Boolean(data);
-
-const badgeVariants = {
-  operational: "badge-success",
-  ok: "badge-success",
-  online: "badge-success",
-  maintenance: "badge-warning",
-  degraded: "badge-warning",
-  offline: "badge-error",
-  incident: "badge-error",
-  major: "badge-error",
-  minor: "badge-warning",
-  planned: "badge-info",
-  in_progress: "badge-info",
-  resolved: "badge-success",
-};
-const badgeClass = (value, extra = "") => `badge ${badgeVariants[value] ?? "badge-ghost"} ${extra}`.trim();
+export const prerender = true;
 ---
+
 <Layout>
-	<div class="hero home-hero relative">
-  <img src="https://wiki.democraft.fr/api/lobby" class="w-full h-96 md:h-112 object-cover rounded-b-3xl shadow-3xl" />
-  <div class="hero-content text-center">
-    <div>
-      <img
-        class="h-16 lg:h-40 mb-2"
-        alt="Rendu 3D du nom du serveur Minecraft"
-        src="https://us-east-1.tixte.net/uploads/cdn.democraft.fr/title_flat.png"
-      />
-      <span class={badgeClass(data.status)}>
+  <div class="hero home-hero relative">
+    <img
+      src="https://wiki.democraft.fr/api/lobby"
+      class="w-full h-96 md:h-112 object-cover rounded-b-3xl shadow-3xl"
+    />
+    <div class="hero-content text-center">
+      <div>
+        <img
+          class="h-16 lg:h-40 mb-2"
+          alt="Rendu 3D du nom du serveur Minecraft"
+          src="https://us-east-1.tixte.net/uploads/cdn.democraft.fr/title_flat.png"
+        />
+        <span id="hero-status" class="badge badge-ghost">
           <div class="inline-grid *:[grid-area:1/1]">
             <div class="status status-neutral animate-ping"></div>
             <div class="status status-neutral"></div>
           </div>
-		  { formatStatus(data.status) }
+          <span id="hero-status-label">Chargement…</span>
         </span>
-      <br />
-      <a href="#1" aria-label="Scroll vers le bas de la page">
-        <iconify-icon icon="lucide:arrow-down" class="font-2xl mt-8" style="font-size: 48px"></iconify-icon>
-      </a>
+        <br />
+        <a href="#1" aria-label="Scroll vers le bas de la page">
+          <iconify-icon icon="lucide:arrow-down" class="font-2xl mt-8" style="font-size: 48px"></iconify-icon>
+        </a>
+      </div>
     </div>
   </div>
-</div>
 
-	<main class="container mx-auto flex flex-col gap-12 px-4 py-4">
-    {hasData ? (
-        <section class="space-y-6">
-          <div class="grid gap-6">
-            {groups.map((group) => (
-              <div class="bg-base-200 border-2 border-base-300 rounded-lg shadow-md pb-4">
-				<h3 class="pt-4 font-bold text-xl text-center font-[Minecraft_Five]">{group.name}</h3>
-				{(services[group.id] ?? []).map((service) => (
-					<div>
-						<div class="divider"></div>
-						<div class="px-2">
-							<a class="flex" href={`/${service.serviceable_id}`}	>
-								<h4 class="card-title flex-1">{service.name}</h4>
-								<span class={badgeClass(service.status)}>
-									<div class="inline-grid *:[grid-area:1/1]">
-										<div class="status status-neutral animate-ping"></div>
-										<div class="status status-neutral"></div>
-									</div>
-									{ formatStatus(service.status) }
-								</span>
-							</a>
-							<p>{service.description}</p>
-						</div>
-					</div>
-				))}
-			  </div>
-
-            ))}
-          </div>
-        </section>
-
-    ) : (
-      <div class="alert alert-info justify-center shadow-lg">
-        <span>Aucune donnée disponible pour le moment. Réessayez plus tard.</span>
+  <main id="1" class="container mx-auto flex flex-col gap-12 px-4 py-4">
+    <section class="space-y-6">
+      <div class="grid gap-6" id="groups-grid">
+        <div class="skeleton h-20"></div>
       </div>
-    )}
+    </section>
+
+    <div id="empty-state" class="hidden alert alert-info justify-center shadow-lg">
+      <span>Aucune donnée disponible pour le moment. Réessayez plus tard.</span>
+    </div>
   </main>
+
+  <script type="module" data-astro-rerun>
+    const API_URL = "https://statut.democraft.fr/json";
+    const heroStatus = document.getElementById("hero-status");
+    const heroStatusLabel = document.getElementById("hero-status-label");
+    const groupsGrid = document.getElementById("groups-grid");
+    const emptyState = document.getElementById("empty-state");
+
+    const statusLabels = {
+      operational: "Operational",
+      ok: "Operational",
+      online: "Online",
+      maintenance: "Maintenance",
+      degraded: "Degraded",
+      offline: "Offline",
+      incident: "Incident",
+      minor: "Minor Issue",
+      major: "Major Issue",
+      planned: "Planned",
+      in_progress: "In Progress",
+      resolved: "Resolved",
+    };
+
+    const badgeVariants = {
+      operational: "badge-success",
+      ok: "badge-success",
+      online: "badge-success",
+      maintenance: "badge-warning",
+      degraded: "badge-warning",
+      offline: "badge-error",
+      incident: "badge-error",
+      major: "badge-error",
+      minor: "badge-warning",
+      planned: "badge-info",
+      in_progress: "badge-info",
+      resolved: "badge-success",
+    };
+
+    function badgeClass(value, extra = "") {
+      return `badge ${badgeVariants[value] ?? "badge-ghost"} ${extra}`.trim();
+    }
+
+    function formatStatus(value) {
+      return statusLabels[value] ?? (value ? value.replace(/_/g, " ") : "Unknown");
+    }
+
+    function renderGroups(groups, services) {
+      if (!groups.length) {
+        groupsGrid.innerHTML = "";
+        emptyState.classList.remove("hidden");
+        return;
+      }
+
+      emptyState.classList.add("hidden");
+      groupsGrid.innerHTML = groups
+        .map((group) => {
+          const groupServices = services.filter((service) => service.group_id === group.id);
+          const servicesHtml = groupServices
+            .map(
+              (service) => `
+                <div>
+                  <div class="divider"></div>
+                  <div class="px-2">
+                    <a class="flex" href="/${service.serviceable_id}">
+                      <h4 class="card-title flex-1">${service.name}</h4>
+                      <span class="${badgeClass(service.status)}">
+                        <div class="inline-grid *:[grid-area:1/1]">
+                          <div class="status status-neutral animate-ping"></div>
+                          <div class="status status-neutral"></div>
+                        </div>
+                        ${formatStatus(service.status)}
+                      </span>
+                    </a>
+                    <p>${service.description ?? ""}</p>
+                  </div>
+                </div>
+              `
+            )
+            .join("");
+
+          return `
+            <div class="bg-base-200 border-2 border-base-300 rounded-lg shadow-md pb-4">
+              <h3 class="pt-4 font-bold text-xl text-center font-[Minecraft_Five]">${group.name}</h3>
+              ${
+                servicesHtml ||
+                '<div class="px-4 py-6 text-center text-base-content/70">Aucun service.</div>'
+              }
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    async function loadStatus() {
+      try {
+        const response = await fetch(API_URL, { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json();
+
+        heroStatus.className = badgeClass(payload.status);
+        heroStatusLabel.textContent = formatStatus(payload.status);
+
+        const groups = payload.groups ?? [];
+        const services = payload.services ?? [];
+        renderGroups(groups, services);
+      } catch (error) {
+        console.error("Status fetch error:", error);
+        heroStatus.className = badgeClass("offline");
+        heroStatusLabel.textContent = "Erreur";
+        emptyState.classList.add("hidden");
+        groupsGrid.innerHTML = `
+          <div class="alert alert-error shadow-lg">
+            <span>Impossible de récupérer le statut pour l'instant.</span>
+          </div>
+        `;
+      }
+    }
+
+    loadStatus();
+    setInterval(loadStatus, 60000);
+  </script>
 </Layout>
