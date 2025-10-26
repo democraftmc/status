@@ -6,7 +6,7 @@ const key = import.meta.env.NETWEAK_API_KEY;
 
 export async function getStaticPaths() {
   try {
-    const response = await fetch("https://statut.democraft.fr/json", {
+    const response = await fetch("https://status.democraft.fr/json", {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
@@ -82,7 +82,7 @@ console.log("Rendering page for slug:", slug, service.id);
   </main>
 
   <script type="module" data-astro-rerun>
-    const SUMMARY_URL = "https://statut.democraft.fr/json";
+    const SUMMARY_URL = "https://status.democraft.fr/json";
     // This skibidi key is restricted to read-only access for demonstration purposes.
     const skibidi = "OvZuej1OBCh8WdvXyUOIJzE9gYYFwbhHtRwrEX2Ed605fa1f";
     const slugValue = document.getElementById("service-id").textContent.trim();
