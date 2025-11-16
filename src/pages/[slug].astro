@@ -20,7 +20,7 @@ export async function getStaticPaths() {
     const services = mainData?.services ?? [];
 
     return services.map((service) => ({
-      params: { slug: service.serviceable_id },
+      params: { slug: service.monitorable_id },
       props: { service },
     }));
   } catch (error) {
