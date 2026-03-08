@@ -1,7 +1,6 @@
 ---
 import "../assets/app.css";
 import Head from './head.astro';
-import Navbar from '../components/Navbar.astro';
 const { title, description } = Astro.props;
 ---
 
@@ -10,7 +9,6 @@ const { title, description } = Astro.props;
   data-theme="demolight">
   <Head title={title} description={description} />
     <body class="bg-base-100">
-      <Navbar />
       <slot />
   </body>
 </html>

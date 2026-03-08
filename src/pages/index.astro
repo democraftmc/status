@@ -1,166 +1,293 @@
 ---
 import Layout from "../layouts/default.astro";
+import { Icon } from "astro-icon/components";
+
 export const prerender = true;
 ---
 
-<Layout>
-  <div class="hero home-hero relative">
-    <img
-      src="https://wiki.democraft.fr/api/lobby"
-      class="w-full h-96 md:h-112 object-cover rounded-b-3xl shadow-3xl"
-    />
-    <div class="hero-content text-center">
-      <div>
-        <img
-          class="h-16 lg:h-40 mb-2"
-          alt="Rendu 3D du nom du serveur Minecraft"
-          src="https://us-east-1.tixte.net/uploads/cdn.democraft.fr/title_flat.png"
-        />
-        <span id="hero-status" class="badge badge-ghost">
-          <div class="inline-grid *:[grid-area:1/1]">
-            <div class="status status-neutral animate-ping"></div>
-            <div class="status status-neutral"></div>
+<Layout title="Statut des serveurs">
+  <div class="max-w-7xl mx-auto animate-fade-in p-4 pb-12 pt-8">
+
+    <!-- Header Bento -->
+    <div class="card bg-base-100 border-2 border-base-300 mb-12 overflow-hidden relative shadow-sm">
+      <div class="absolute inset-0 opacity-5 bg-[url('/logos/logo.png')] bg-center bg-no-repeat bg-contain blur-sm z-0"></div>
+      <div class="card-body text-center flex flex-col items-center justify-center p-12 lg:p-16 z-10 relative">
+        <div class="bg-primary/10 p-4 rounded-full mb-6 border-2 border-primary/20">
+             <Icon name="lucide:activity" class="w-12 h-12 text-primary drop-shadow-md" />
+        </div>
+        <h1 class="text-4xl md:text-6xl font-[Minecraft_Five] text-primary mb-6">STATUT DES SERVICES</h1>
+        
+        <div id="hero-status" class="badge badge-neutral text-neutral-content border-2 border-base-300 font-bold py-6 px-8 gap-3 shadow-sm text-lg md:text-xl rounded-xl transition-all duration-500">
+          <div class="inline-grid *:[grid-area:1/1] mr-1">
+            <div id="hero-dot-ping" class="status status-neutral animate-ping h-4 w-4 opacity-75"></div>
+            <div id="hero-dot" class="status status-neutral h-4 w-4"></div>
           </div>
-          <span id="hero-status-label">Chargement…</span>
-        </span>
-        <br />
-        <a href="#1" aria-label="Scroll vers le bas de la page">
-          <iconify-icon icon="lucide:arrow-down" class="font-2xl mt-8" style="font-size: 48px"></iconify-icon>
-        </a>
+          <span id="hero-text">Analyse en cours...</span>
+        </div>
+        <p class="text-sm opacity-60 mt-6 font-mono flex items-center gap-2">
+           <Icon name="lucide:refresh-cw" class="w-4 h-4 animate-spin-slow" style="animation-duration: 3s;" />
+           Actualisation automatique en temps réel
+        </p>
       </div>
     </div>
+
+    <!-- Container Services -->
+    <div id="status-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-[minmax(180px,auto)] min-h-[400px]">
+        <!-- Skeletons (Bento Style Layout) -->
+        <div class="col-span-full mb-2 mt-4 flex items-center gap-4">
+             <div class="h-8 bg-base-300 rounded w-48 animate-pulse"></div>
+             <div class="h-[2px] bg-base-200 flex-grow rounded-full"></div>
+        </div>
+        
+        <div class="card bg-base-200/50 border-2 border-base-300 p-8 rounded-xl md:col-span-2 md:row-span-2 flex flex-col animate-pulse">
+             <div class="flex justify-between items-start mb-auto w-full">
+                  <div class="w-1/2">
+                       <div class="h-4 bg-base-300 rounded w-1/3 mb-2"></div>
+                       <div class="h-8 bg-base-300 rounded w-3/4"></div>
+                  </div>
+                  <div class="h-8 bg-base-300 rounded-full w-24"></div>
+             </div>
+             <div class="h-12 bg-base-300 rounded w-full mt-12"></div>
+        </div>
+        <div class="card bg-base-200/50 border-2 border-base-300 p-8 rounded-xl animate-pulse flex flex-col">
+             <div class="h-4 bg-base-300 rounded w-1/2 mb-2"></div>
+             <div class="h-8 bg-base-300 rounded w-3/4 mb-auto"></div>
+             <div class="h-8 bg-base-300 rounded w-full mt-12 opacity-50"></div>
+        </div>
+        <div class="card bg-base-200/50 border-2 border-base-300 p-8 rounded-xl animate-pulse flex flex-col">
+             <div class="h-4 bg-base-300 rounded w-1/2 mb-2"></div>
+             <div class="h-8 bg-base-300 rounded w-3/4 mb-auto"></div>
+             <div class="h-8 bg-base-300 rounded w-full mt-12 opacity-50"></div>
+        </div>
+        <div class="card bg-base-200/50 border-2 border-base-300 p-8 rounded-xl animate-pulse flex flex-col md:col-span-2">
+             <div class="h-4 bg-base-300 rounded w-1/4 mb-2"></div>
+             <div class="h-8 bg-base-300 rounded w-1/2 mb-auto"></div>
+             <div class="h-8 bg-base-300 rounded w-full mt-12 opacity-50"></div>
+        </div>
+    </div>
+
   </div>
 
-  <main id="1" class="container mx-auto flex flex-col gap-12 px-4 py-4">
-    <section class="space-y-6">
-      <div class="grid gap-6" id="groups-grid">
-        <div class="skeleton h-20"></div>
-      </div>
-    </section>
+  <script data-astro-rerun>
+    // Variables locales pour le tracking et l'update
+    let refreshInterval;
 
-    <div id="empty-state" class="hidden alert alert-info justify-center shadow-lg">
-      <span>Aucune donnée disponible pour le moment. Réessayez plus tard.</span>
-    </div>
-  </main>
-
-  <script type="module" data-astro-rerun>
-    const API_URL = "https://status.democraft.fr/json";
-    const heroStatus = document.getElementById("hero-status");
-    const heroStatusLabel = document.getElementById("hero-status-label");
-    const groupsGrid = document.getElementById("groups-grid");
-    const emptyState = document.getElementById("empty-state");
-
-    const statusLabels = {
-      operational: "Operational",
-      ok: "Operational",
-      online: "Online",
-      maintenance: "Maintenance",
-      degraded: "Degraded",
-      offline: "Offline",
-      incident: "Incident",
-      minor: "Minor Issue",
-      major: "Major Issue",
-      planned: "Planned",
-      in_progress: "In Progress",
-      resolved: "Resolved",
-    };
-
-    const badgeVariants = {
-      operational: "badge-success",
-      ok: "badge-success",
-      online: "badge-success",
-      maintenance: "badge-warning",
-      degraded: "badge-warning",
-      offline: "badge-error",
-      incident: "badge-error",
-      major: "badge-error",
-      minor: "badge-warning",
-      planned: "badge-info",
-      in_progress: "badge-info",
-      resolved: "badge-success",
-    };
-
-    function badgeClass(value, extra = "") {
-      return `badge ${badgeVariants[value] ?? "badge-ghost"} ${extra}`.trim();
+    function getStatusInfo(statusId) {
+      if (statusId === 1) return { label: "En ligne", class: "badge-success text-success-content border-success/20", dotClass: "status-success", bgCard: "bg-base-100 border-2 border-base-300 hover:border-success/50" };
+      if (statusId === 0) return { label: "Hors ligne", class: "badge-error text-error-content border-error/50", dotClass: "status-error", bgCard: "bg-error/5 border-2 border-error/50 shadow-[0_0_15px_rgba(255,0,0,0.05)] relative overflow-hidden" };
+      if (statusId === 2) return { label: "En attente", class: "badge-warning text-warning-content border-warning/20", dotClass: "status-warning", bgCard: "bg-base-100 border-2 border-base-300 hover:border-warning/50" };
+      if (statusId === 3) return { label: "Maintenance", class: "badge-info text-info-content border-info/20", dotClass: "status-info", bgCard: "bg-base-100 border-2 border-info/20" };
+      return { label: "Inconnu", class: "badge-ghost text-base-content border-base-300", dotClass: "status-neutral", bgCard: "bg-base-200 border-2 border-base-300" };
     }
 
-    function formatStatus(value) {
-      return statusLabels[value] ?? (value ? value.replace(/_/g, " ") : "Unknown");
+    function formatTime(isoStr) {
+        const d = new Date(isoStr.replace(" ", "T") + "Z");
+        return isNaN(d.getTime()) ? "" : d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     }
 
-    function renderGroups(groups, services) {
-      if (!groups.length) {
-        groupsGrid.innerHTML = "";
-        emptyState.classList.remove("hidden");
-        return;
-      }
+    async function fetchStatus() {
+        // add a timestamp to bypass proxy caching, and request no-store from fetch
+        const API_URL_BASE = "https://corsproxy.io/?" + encodeURIComponent("https://status.funa.dev/api/status-page/demo");
+        const HEARTBEAT_URL_BASE = "https://corsproxy.io/?" + encodeURIComponent("https://status.funa.dev/api/status-page/heartbeat/demo");
 
-      emptyState.classList.add("hidden");
-      groupsGrid.innerHTML = groups
-        .map((group) => {
-          const groupServices = services.filter((service) => service.group_id === group.id);
-          const servicesHtml = groupServices
-            .map(
-              (service) => `
-                <div>
-                  <div class="divider"></div>
-                  <div class="px-2">
-                    <a class="flex" href="/${service.serviceable_id}">
-                      <h4 class="card-title flex-1">${service.name}</h4>
-                      <span class="${badgeClass(service.status)}">
-                        <div class="inline-grid *:[grid-area:1/1]">
-                          <div class="status status-neutral animate-ping"></div>
-                          <div class="status status-neutral"></div>
+        function makeApiUrl(base) {
+            return base + "?t=" + Date.now();
+        }
+
+        const heroStatus = document.getElementById("hero-status");
+        const heroText = document.getElementById("hero-text");
+        const heroDotPing = document.getElementById("hero-dot-ping");
+        const heroDot = document.getElementById("hero-dot");
+        const container = document.getElementById("status-container");
+
+        if(!container) return; // Si la page a changé
+
+        try {
+            const [statusRes, heartbeatRes] = await Promise.all([
+                fetch(makeApiUrl(API_URL_BASE), { cache: "no-store", headers: { "Accept": "application/json" } }),
+                fetch(makeApiUrl(HEARTBEAT_URL_BASE), { cache: "no-store", headers: { "Accept": "application/json" } })
+            ]);
+            
+            const payload = await statusRes.json();
+            const heartbeatData = await heartbeatRes.json();
+            
+            let groups = payload.publicGroupList ?? [];
+            let heartbeats = heartbeatData.heartbeatList ?? {};
+
+            let allOk = true;
+            let anyDown = false;
+            let anyMaintenance = false;
+            let totalCount = 0;
+            
+            let html = "";
+            
+            groups.forEach((group, gIndex) => {
+                const monitors = group.monitorList ?? [];
+                if (monitors.length === 0) return;
+
+                // Category Header
+                let categoryName = group.name && group.name !== "Default" ? group.name : "Services Communs";
+                html += `
+                <div class="col-span-full mt-8 mb-2 flex items-center gap-4 animate-fade-in" style="animation-delay: ${gIndex * 100}ms">
+                    <h2 class="text-2xl font-bold font-[Minecraft_Five] text-base-content">${categoryName}</h2>
+                    <div class="h-[2px] bg-base-300 flex-grow rounded-full"></div>
+                </div>`;
+
+                monitors.forEach((monitor, index) => {
+                    totalCount++;
+                    const monitorHeartbeats = heartbeats[monitor.id] ?? [];
+                    const currentHeartbeat = monitorHeartbeats[monitorHeartbeats.length - 1] ?? null;
+                    
+                    let pingText = "--";
+                    // default to offline when no heartbeat is present
+                    let currentStatus = 0;
+
+                    if (currentHeartbeat) {
+                        currentStatus = currentHeartbeat.status;
+                        pingText = (currentHeartbeat.ping !== null && currentHeartbeat.ping !== undefined) ? currentHeartbeat.ping.toString() : "--";
+                    }
+
+                    // log for debugging/cache check
+                    console.log(`monitor=${monitor.name} id=${monitor.id} status=${currentStatus} ping=${pingText}`);
+
+                    if (currentStatus === 0) { anyDown = true; allOk = false; }
+                    else if (currentStatus === 3) { anyMaintenance = true; allOk = false; }
+                    else if (currentStatus !== 1) { allOk = false; }
+
+                    const info = getStatusInfo(currentStatus);
+                    const recentHeartbeats = monitorHeartbeats.slice(-40);
+                    
+                    // -- BENTO GRID LOGIC --
+                    // Changer la taille des cartes pour donner un layout asymétrique "Bento"
+                    let spanClasses = "md:col-span-1 lg:col-span-1 border-b-4 hover:border-b-4"; 
+                    
+                    if (monitors.length == 1) {
+                        spanClasses = "md:col-span-3"; 
+                    } 
+                    // Le premier élément du premier groupe est énorme "Hero Card"
+                    if (gIndex === 0 && index === 0 && monitors.length >= 3) {
+                        spanClasses = "md:col-span-2 lg:col-span-2 lg:row-span-2 bg-gradient-to-br from-base-100 to-base-200 border-b-8 shadow-md"; 
+                    } 
+                    // Si on a un nombre impair, étaler le premier élément ou le dernier 
+                    else if (index === 0 && monitors.length % 2 === 0 && monitors.length > 1) {
+                         spanClasses = "md:col-span-2 lg:col-span-2";
+                    }
+
+
+                    let pingBars = "";
+                    if (recentHeartbeats.length > 0) {
+                        let bars = recentHeartbeats.map(hb => {
+                            const barColor = hb.status === 1 ? "bg-success" : (hb.status === 0 ? "bg-error" : "bg-warning");
+                            const height = hb.status === 1 ? "100%" : (hb.status === 0 ? "20%" : "60%");
+                            const tooltip = `${formatTime(hb.time)} - ${hb.ping || "--"}ms`;
+                            return `<div class="flex-1 w-full rounded-[1px] hover:brightness-125 transition-all cursor-crosshair ${barColor}" style="height: ${height}; min-width: 3px;" title="${tooltip}"></div>`;
+                        }).join("");
+                        pingBars = `<div class="flex items-end gap-[2px] md:gap-1 h-3/4 w-full opacity-90">${bars}</div>`;
+                    } else {
+                        pingBars = `<div class="h-full flex items-end pb-2 justify-start text-xs opacity-50 w-full font-mono">En attente des données...</div>`;
+                    }
+
+                    const delay = (gIndex * 100) + (index * 50);
+
+                    html += `
+                    <div class="card group ${info.bgCard} p-6 md:p-8 rounded-xl shadow-sm hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col justify-between ${spanClasses} animate-slide-up" style="animation-delay: ${delay}ms; border-bottom-color: var(--fallback-bc,oklch(var(--bc)/0.2));">
+                        ${currentStatus === 0 ? '<div class="absolute -bottom-10 -right-10 w-32 h-32 bg-error opacity-20 blur-3xl rounded-full"></div><div class="absolute top-0 right-0 w-full h-1 bg-error animate-pulse"></div>' : ''}
+                        
+                        <div class="flex flex-col md:flex-row justify-between md:items-start mb-6 gap-4 z-10 relative">
+                            <div class="min-w-0 pr-2">
+                                <div class="text-[10px] md:text-xs uppercase font-extrabold mb-2 tracking-widest opacity-50 flex items-center gap-2">
+                                    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14m-7-7v14"/></svg>
+                                    ${categoryName}
+                                </div>
+                                <h3 class="font-bold text-xl md:text-2xl text-base-content leading-tight font-[Minecraft_Five] truncate block max-w-full" title="${monitor.name}">${monitor.name}</h3>
+                            </div>
+                            <div class="badge ${info.class} font-bold py-3 px-4 gap-2 border shadow-sm shrink-0 whitespace-nowrap self-start">
+                                <div class="inline-grid *:[grid-area:1/1]">
+                                    <div class="status ${info.dotClass} animate-ping opacity-75"></div>
+                                    <div class="status ${info.dotClass}"></div>
+                                </div>
+                                ${info.label}
+                            </div>
                         </div>
-                        ${formatStatus(service.status)}
-                      </span>
-                    </a>
-                    <p>${service.description ?? ""}</p>
-                  </div>
-                </div>
-              `
-            )
-            .join("");
+                        
+                        <div class="mt-auto flex flex-col items-start gap-4 w-full z-10 relative">
+                            <div class="text-3xl md:text-4xl font-bold tracking-tighter font-mono flex items-baseline gap-1 mt-4">
+                                ${pingText} <span class="text-sm md:text-base font-medium opacity-50">ms</span>
+                            </div>
+                            <div class="w-full mt-2 border-t-2 border-base-200 border-dashed pt-4 h-16 relative">
+                                <div class="absolute inset-x-0 bottom-0 top-4 opacity-5 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#000_10px,#000_11px)]"></div>
+                                ${pingBars}
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                });
+            });
 
-          return `
-            <div class="bg-base-200 border-2 border-base-300 rounded-lg shadow-md pb-4">
-              <h3 class="pt-4 font-bold text-xl text-center font-[Minecraft_Five]">${group.name}</h3>
-              ${
-                servicesHtml ||
-                '<div class="px-4 py-6 text-center text-base-content/70">Aucun service.</div>'
-              }
-            </div>
-          `;
-        })
-        .join("");
+            if (totalCount === 0) {
+               container.innerHTML = `<div class="col-span-full alert bg-warning/10 border-2 border-warning text-warning-content justify-center shadow-sm rounded-xl py-6"><span class="font-bold pr-2 flex items-center gap-2">Aucun service défini sur le moniteur.</span></div>`;
+            } else {
+               container.innerHTML = html;
+            }
+
+            // Update Hero Status Badge
+            let heroClass = "badge-neutral text-neutral-content border-base-300";
+            let heroLabel = "Inconnu";
+            let dotColor = "status-neutral";
+
+            if (totalCount === 0) {
+                heroClass = "badge-warning text-warning-content border-warning/50 bg-warning/10";
+                heroLabel = "Aucun service";
+                dotColor = "status-warning";
+            } else if (allOk) {
+                heroClass = "badge-success text-success-content border-success/50 bg-success/10";
+                heroLabel = "Tous les systèmes opérationnels";
+                dotColor = "status-success";
+            } else if (anyDown) {
+                heroClass = "badge-error text-error-content border-error shadow-[0_0_20px_rgba(255,0,0,0.2)] bg-error/10";
+                heroLabel = "Incident partiel ou total en cours";
+                dotColor = "status-error";
+            } else if (anyMaintenance) {
+                heroClass = "badge-info text-info-content border-info/50 bg-info/10";
+                heroLabel = "Maintenance en cours";
+                dotColor = "status-info";
+            } else {
+                heroClass = "badge-warning text-warning-content border-warning/50 bg-warning/10";
+                heroLabel = "Performances réseau dégradées";
+                dotColor = "status-warning";
+            }
+
+            heroStatus.className = `badge ${heroClass} font-bold py-6 px-8 gap-3 border-2 shadow-sm text-lg md:text-xl rounded-xl transition-all duration-500`;
+            heroText.textContent = heroLabel;
+            heroDotPing.className = `status ${dotColor} animate-ping h-4 w-4 opacity-75`;
+            heroDot.className = `status ${dotColor} h-4 w-4`;
+
+        } catch (e) {
+            console.error(e);
+            heroStatus.className = `badge badge-error text-error-content border-error shadow-[0_0_20px_rgba(255,0,0,0.2)] bg-error/10 font-bold py-6 px-8 gap-3 border-2 text-lg md:text-xl rounded-xl transition-all duration-500`;
+            heroText.textContent = "Serveur d'état injoignable";
+            heroDotPing.className = `status status-error animate-ping h-4 w-4 opacity-75`;
+            heroDot.className = `status status-error h-4 w-4`;
+            container.innerHTML = `<div class="col-span-full alert bg-error/10 border-2 border-error text-error-content justify-center shadow-sm rounded-xl py-6"><span class="font-bold flex items-center gap-2">Impossible d'établir la connexion aux moniteurs de santé.</span></div>`;
+        }
     }
 
-    async function loadStatus() {
-      try {
-        const response = await fetch(API_URL, { cache: "no-store" });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const payload = await response.json();
-
-        heroStatus.className = badgeClass(payload.status);
-        heroStatusLabel.textContent = formatStatus(payload.status);
-
-        const groups = payload.groups ?? [];
-        const services = payload.services ?? [];
-        renderGroups(groups, services);
-      } catch (error) {
-        console.error("Status fetch error:", error);
-        heroStatus.className = badgeClass("offline");
-        heroStatusLabel.textContent = "Erreur";
-        emptyState.classList.add("hidden");
-        groupsGrid.innerHTML = `
-          <div class="alert alert-error shadow-lg">
-            <span>Impossible de récupérer le statut pour l'instant.</span>
-          </div>
-        `;
-      }
+    // Gérer proprement le démarrage et l'Astro View Transitions
+    function init() {
+        if(refreshInterval) clearInterval(refreshInterval);
+        fetchStatus();
+        refreshInterval = setInterval(fetchStatus, 60000);
     }
 
-    loadStatus();
-    setInterval(loadStatus, 60000);
+    // Au premier chargement pur
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+    } else {
+        init();
+    }
+    
+    // Au rechargement via les View Transitions d'Astro
+    document.addEventListener("astro:page-load", init);
+
   </script>
 </Layout>
