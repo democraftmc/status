@@ -87,8 +87,8 @@ export const prerender = true;
 
     async function fetchStatus() {
         // add a timestamp to bypass proxy caching, and request no-store from fetch
-        const API_URL_BASE = "https://corsproxy.io/?" + encodeURIComponent("https://status.funa.dev/api/status-page/demo");
-        const HEARTBEAT_URL_BASE = "https://corsproxy.io/?" + encodeURIComponent("https://status.funa.dev/api/status-page/heartbeat/demo");
+        const API_URL_BASE = "https://corsproxy.io/?" + encodeURIComponent("https://statut.minecube.xyz/api/status-page/demo");
+        const HEARTBEAT_URL_BASE = "https://corsproxy.io/?" + encodeURIComponent("https://statut.minecube.xyz/api/status-page/heartbeat/demo");
 
         function makeApiUrl(base) {
             return base + "?t=" + Date.now();
